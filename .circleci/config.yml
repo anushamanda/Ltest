@@ -1,0 +1,50 @@
+# PHP CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-php/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # Specify the version you desire here
+      - image: circleci/php:7.4-node-browsers
+
+    steps:
+      - checkout
+
+      - run:
+          name: "Prepare Environment"
+          command: |
+            sudo apt update
+            sudo docker-php-ext-install zip
+          
+      - run:
+          name: "Create Environment file"
+          command: |
+            mv .env.dusk.testing .env
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.json" }}
+            - v1-dependencies-
+          
+      - run:
+          name: "Install Dusk and Update Chrome Drivers"
+          command: php artisan dusk:install
+          
+      - run:
+          name: Update Chrome Driver
+          command: php artisan dusk:chrome-driver 72
+           
+      - run:
+          name: Start Chrome Driver
+          command: ./vendor/laravel/dusk/bin/chromedriver-linux
+          background: true
+      
+      - run:
+          name: Run Laravel Dusk Tests
+          command: php artisan dusk --group=Specimens
+          environment:
+            APP_URL: https://cora-vuetify-dev.herokuapp.com
+      - store_artifacts:
+          path: tests/Browser/screenshots
