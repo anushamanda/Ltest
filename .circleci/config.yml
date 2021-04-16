@@ -22,11 +22,18 @@ jobs:
           name: "Create Environment file"
           command: |
             mv .env.dusk.testing .env
+      - run:
+          name: "Install Dependencies"
+          command: composer install --ignore-platform-reqs
+
+      - save_cache:
+          key: v1-dependencies-{{ checksum "composer.json" }}
+          paths:
+            - ./vendor
 
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "composer.json" }}
-            - v1-dependencies-
           
       - run:
           name: "Install Dusk and Update Chrome Drivers"
@@ -43,7 +50,7 @@ jobs:
       
       - run:
           name: Run Laravel Dusk Tests
-          command: php artisan dusk --group=Specimens
+          command: php artisan dusk ./tests/Browser/specimens/actionEditDiscardTest.php
           environment:
             APP_URL: https://cora-vuetify-dev.herokuapp.com
       - store_artifacts:
