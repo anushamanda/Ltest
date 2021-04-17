@@ -50,7 +50,7 @@ jobs:
       
       - run:
           name: Run Laravel Dusk Tests
-          command: php artisan dusk ./tests/Browser/specimens/actionEditDiscardTest.php
+          command: php artisan dusk ./tests/Browser/specimens
           environment:
             APP_URL: https://cora-vuetify-dev.herokuapp.com
       - store_artifacts:
