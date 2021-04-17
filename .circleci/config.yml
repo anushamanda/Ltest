@@ -41,7 +41,7 @@ jobs:
           
       - run:
           name: Update Chrome Driver
-          command: php artisan dusk:chrome-driver 72
+          command: php artisan dusk:chrome-driver 89
            
       - run:
           name: Start Chrome Driver
