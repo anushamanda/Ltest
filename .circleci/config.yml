@@ -1,12 +1,9 @@
-# PHP CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-php/ for more details
-#
-version: 2
+version: 2.1
+orbs:
+  newman: postman/newman@0.0.2
 jobs:
-  build:
+  specimenaction-ui-run:
     docker:
-      # Specify the version you desire here
       - image: circleci/php:7.4-node-browsers
 
     steps:
@@ -17,11 +14,12 @@ jobs:
           command: |
             sudo apt update
             sudo docker-php-ext-install zip
-          
+
       - run:
           name: "Create Environment file"
           command: |
             mv .env.dusk.testing .env
+
       - run:
           name: "Install Dependencies"
           command: composer install --ignore-platform-reqs
@@ -34,25 +32,90 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "composer.json" }}
-          
+
+      - run:
+          name: Update Chrome Driver
+          command: php artisan dusk:chrome-driver 72
+
       - run:
           name: "Install Dusk and Update Chrome Drivers"
           command: php artisan dusk:install
-          
-      - run:
-          name: Update Chrome Driver
-          command: php artisan dusk:chrome-driver 89
-           
+
       - run:
           name: Start Chrome Driver
           command: ./vendor/laravel/dusk/bin/chromedriver-linux
           background: true
-      
+
       - run:
-          name: Run Laravel Dusk Tests
-          command: php artisan dusk ./tests/Browser/importFileTest.php
+          command: php artisan dusk ./tests/Browser/specimens/actionEditDiscardTest.php
           environment:
             APP_URL: https://cora-vuetify-dev.herokuapp.com
 
       - store_artifacts:
           path: tests/Browser/screenshots
+
+      - store_test_results:
+          path: ~/phpunit
+
+
+  specimenaction2-ui-run:
+    docker:
+      - image: circleci/php:7.4-node-browsers
+
+    steps:
+      - checkout
+
+      - run:
+          name: "Prepare Environment"
+          command: |
+            sudo apt update
+            sudo docker-php-ext-install zip
+
+      - run:
+          name: "Create Environment file"
+          command: |
+            mv .env.dusk.testing .env
+
+      - run:
+          name: "Install Dependencies"
+          command: composer install --ignore-platform-reqs
+
+      - save_cache:
+          key: v1-dependencies-{{ checksum "composer.json" }}
+          paths:
+            - ./vendor
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.json" }}
+
+      - run:
+          name: Update Chrome Driver
+          command: php artisan dusk:chrome-driver 72
+
+      - run:
+          name: "Install Dusk and Update Chrome Drivers"
+          command: php artisan dusk:install
+
+      - run:
+          name: Start Chrome Driver
+          command: ./vendor/laravel/dusk/bin/chromedriver-linux
+          background: true
+
+      - run:
+          command: php artisan dusk ./tests/Browser/specimens/actionEditTest.php
+          environment:
+            APP_URL: https://cora-vuetify-dev.herokuapp.com
+
+      - store_test_results:
+          path: ~/phpunit
+
+      - store_artifacts:
+          path: tests/Browser/screenshots
+
+workflows:
+  version: 2
+  test-UI:
+    jobs:
+      - specimenaction-ui-run
+      - specimenaction2-ui-run
